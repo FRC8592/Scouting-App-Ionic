@@ -1,0 +1,7 @@
+{
+  "name": "scouting-app-but-ionic",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
