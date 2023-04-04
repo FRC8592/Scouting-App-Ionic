@@ -2,6 +2,11 @@
 http://ionicframework.com/docs/theming/ */
 
 /** Ionic CSS Variables **/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /** primary **/
   --ion-color-primary: #3880ff;
@@ -154,6 +159,7 @@ http://ionicframework.com/docs/theming/ */
 
   .ios body {
     --ion-background-color: #000000;
+    --ion-total-background-color: #000000;
     --ion-background-color-rgb: 0,0,0;
 
     --ion-text-color: #ffffff;
@@ -234,3 +240,61 @@ http://ionicframework.com/docs/theming/ */
     --ion-card-background: #1e1e1e;
   }
 }
+
+
+ion-item {
+  --background: var(--ion-color-step-150);
+}
+
+.ios .clickable:active {
+  --background: var(--ion-color-step-200);
+  --transition: 0ms;
+}
+
+.ios .popitems ion-item {
+  --background: transparent;
+}
+
+.popitems {
+  background: transparent;
+}
+
+
+ion-popover {
+  --background: rgba(var(--ion-color-dark-contrast-rgb), 0.6);
+}
+
+ion-popover::part(content) {
+  backdrop-filter: blur(10px);
+}
+
+
+ion-checkbox {
+  --checkbox-background: var(--ion-color-step-150);
+}
+
+
+
+ion-item-divider {
+  --background: var(--ion-color-step-200)
+}
+
+
+.zstack {
+	display: grid;
+	align-items: center;
+	justify-items: center;
+}
+
+.zstack-no-center {
+	display: grid;
+}
+
+.zstack > * {
+	grid-area: 1/1/1/1;
+}
+
+.zstack-no-center > * {
+	grid-area: 1/1/1/1;
+}
+

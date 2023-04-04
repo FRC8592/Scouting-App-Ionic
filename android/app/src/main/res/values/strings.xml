@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">scouting-app-but-ionic</string>
+    <string name="title_activity_main">scouting-app-but-ionic</string>
+    <string name="package_name">univscoutapp.g5works.com</string>
+    <string name="custom_url_scheme">univscoutapp.g5works.com</string>
+</resources>
