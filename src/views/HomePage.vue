@@ -266,6 +266,9 @@
                 <ion-button fill="clear" color="success" size="small" @click="pointManager(mode, 1, mode ? 2 : 3, true, 2)"><ion-icon :icon="addCircle"></ion-icon></ion-button>
               </div>
             </div>
+            
+            g
+
 
 
             
@@ -332,7 +335,7 @@
   import {ref, reactive, computed, onMounted} from 'vue'
   import {Storage, Drivers} from '@ionic/storage'
   import {v4 as uuidv4} from 'uuid'
-import { toNumber } from '@vue/shared';
+  import { toNumber } from '@vue/shared';
 
   const openModal = ref(false)
   const openModal2 = ref(false)
