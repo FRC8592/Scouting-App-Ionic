@@ -23,17 +23,22 @@
       </ion-header>
 
       <ion-list :inset="true">
-        <ion-item-sliding color="medium">
+        <ion-item-sliding color="medium" v-for="(val) in datacontent">
           <ion-item>
             <ion-label>
-              <h1 style="font-weight: bold">Match 18, Team 8592</h1>
-              <p>Scouter Name: Aryan Tadepalli</p>
+              <h1 style="font-weight: bold">Match {{ val[1].mnum }}, Team {{ val[1].tnum }}</h1>
+              <p>Scouter Name: {{ val[1].name }}</p>              
             </ion-label>
           </ion-item>
-
-          <ion-item-options>
-            <ion-item-option>Favorite</ion-item-option>
-            <ion-item-option color="danger">Delete</ion-item-option>
+          <ion-item-options ref="cardoptions">
+            <ion-item-option @click="formLinkGen(val[1])">
+              <ion-icon slot="top" :icon="globeOutline"></ion-icon>
+              Resend
+            </ion-item-option>
+            <ion-item-option color="danger" @click="removeItem(val)">
+              <ion-icon slot="top" :icon="trashOutline"></ion-icon>
+              Delete
+            </ion-item-option>
           </ion-item-options>
         </ion-item-sliding>
 
@@ -50,7 +55,7 @@
           <ion-toolbar>
             <ion-title>Match Data</ion-title>
             <ion-buttons slot="end">
-              <ion-button @click="changeState" class="font-bold">Add</ion-button>
+              <ion-button @click="storeNew()" class="font-bold" :disabled="!(name && tnumber && mnumber)">Add</ion-button>
             </ion-buttons>
             <ion-buttons slot="start">
               <ion-button @click="changeState">Close</ion-button>
@@ -75,7 +80,7 @@
             <ion-item>
               <ion-input inputmode="numeric" v-model="mnumber" placeholder="Match Number"/>
             </ion-item>
-          </ion-list>
+            </ion-list>
         
           
           <ion-list :inset="true">
@@ -95,14 +100,15 @@
               </div>
             </ion-item>
 
+            <ion-item class="clickable" @click="openModal3 = true">
+              <p>Start Position</p>
+            </ion-item>
 
             <ion-item>
               <ion-checkbox color="success" v-model="leftcomm">Did leave community?</ion-checkbox>
             </ion-item>
 
-            <ion-item class="clickable" @click="openModal3 = true">
-              <p>Start Position</p>
-            </ion-item>
+            
 
             <ion-item class="clickable" @click="{openModal2 = true; mode = false}">
               <p>Cubes and Cones</p>
@@ -121,6 +127,8 @@
                 
               </div>
             </ion-item>
+
+            
           </ion-list>
 
           <ion-list :inset="true">
@@ -131,6 +139,38 @@
 
             <ion-item class="clickable" @click="{openModal2 = true; mode = true}">
               <p>Cubes and Cones</p>
+            </ion-item>
+
+            <ion-item>
+              <ion-checkbox color="danger" v-model="fell">Did they fall?</ion-checkbox>
+            </ion-item>
+
+            <ion-item>
+              <div class="w-full flex items-center justify-between">
+                <p>How well can they hold cones?</p>
+                <select v-model="conehold" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
+                  <option value="0">Can't grab</option>
+                  <option value="1">Drops</option>
+                  <option value="2">Drops on bump</option>
+                  <option value="3">Does not drop</option>  
+         
+                </select>
+                
+              </div>
+            </ion-item>
+
+            <ion-item>
+              <div class="w-full flex items-center justify-between">
+                <p>How well can they hold cubes?</p>
+                <select v-model="cubehold" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
+                  <option value="0">Can't grab</option>
+                  <option value="1">Drops</option>
+                  <option value="2">Drops on bump</option>
+                  <option value="3">Does not drop</option>  
+         
+                </select>
+                
+              </div>
             </ion-item>
 
             <ion-item>
@@ -153,17 +193,44 @@
               Ratings and Comments
             </ion-item-divider>
             
-
             <ion-item>
-              <ion-textarea v-model="pros" class="my-1" label="" placeholder="What did you like about their performance?"></ion-textarea>
+              <div class="w-full flex items-center justify-between">
+                <p>Driver Performance</p>
+                <select v-model="drivrating" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
+                  <option value="0">Very Bad</option>
+                  <option value="1">Bad</option>
+                  <option value="2">Decent</option>
+                  <option value="3">Good</option>
+                  <option value="4">Very Good</option>
+         
+                </select>
+                
+              </div>
+            </ion-item>
+            <ion-item>
+              <div class="w-full flex items-center justify-between">
+                <p>Tippiness Rating</p>
+                <select v-model="tippiness" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
+                  <option value="0">Very Tippy</option>
+                  <option value="1">Tippy</option>
+                  <option value="2">Decent</option>
+                  <option value="3">Stable</option>
+                  <option value="4">Very Stable</option>
+         
+                </select>
+                
+              </div>
+            </ion-item>
+            <ion-item>
+              <ion-textarea @input="pros=$event.target.value" class="my-1" label="" placeholder="What did you like about their performance?"></ion-textarea>
             </ion-item>
 
             <ion-item>
-              <ion-textarea v-model="cons" class="my-1" label="" placeholder="What did you dislike about their performance?"></ion-textarea>
+              <ion-textarea @input="cons=$event.target.value" class="my-1" label="" placeholder="What did you dislike about their performance?"></ion-textarea>
             </ion-item>
 
             <ion-item>
-              <ion-textarea v-model="other" class="my-1" label="" placeholder="Other comments"></ion-textarea>
+              <ion-textarea @input="other=$event.target.value" class="my-1" label="" placeholder="Other comments"></ion-textarea>
             </ion-item>
 
             
@@ -193,6 +260,7 @@
           <div class="flex flex-col h-5/6 justify-center align-center [&>*]:my-4 text-center">
         
             <ion-label>
+              <p>{{ currenttime }}</p>
               <h1 style="font-weight: bold; font-size: 4em">{{mode ? telePts : autoPts}}</h1>
               <h1 style="font-weight: bold;">{{mode ? "TeleOp" : "Autonomous"}} Points Scored</h1>
             </ion-label>
@@ -266,6 +334,52 @@
                 <ion-button fill="clear" color="success" size="small" @click="pointManager(mode, 1, mode ? 2 : 3, true, 2)"><ion-icon :icon="addCircle"></ion-icon></ion-button>
               </div>
             </div>
+            <div>
+              <ion-list :inset="true" v-if="mode">
+                <ion-item>
+                  <div class="w-full flex items-center justify-between px-1">
+                    <p>Number of times the failed to defend</p>
+                  
+                    <ion-button fill="clear" @click="whiffs ? whiffs -= 1 : whiffs ">
+                      <ion-icon color="danger" :icon="removeOutline" size="small"/>
+                    </ion-button>
+                    <p>{{ whiffs }}</p>
+                    <ion-button fill="clear" @click="whiffs += 1">
+                      <ion-icon color="success" :icon="addOutline" size="small"/>
+                    </ion-button>
+                  </div>
+                </ion-item>
+
+                <ion-item>
+                  <div class="w-full flex items-center justify-between px-1">
+                    <p>Number of times they defended</p>
+                  
+                    <ion-button fill="clear" @click="defended ? defended -= 1 : defended ">
+                      <ion-icon color="danger" :icon="removeOutline" size="small"/>
+                    </ion-button>
+                    <p>{{ defended }}</p>
+                    <ion-button fill="clear" @click="defended += 1">
+                      <ion-icon color="success" :icon="addOutline" size="small"/>
+                    </ion-button>
+                  </div>
+                </ion-item>
+
+                <ion-item>
+                  <div class="w-full flex items-center justify-between px-1">
+                    <p>Number of times they inhibited their team</p>
+                  
+                    <ion-button fill="clear" @click="inhibition ? inhibition -= 1 : inhibition ">
+                      <ion-icon color="danger" :icon="removeOutline" size="small"/>
+                    </ion-button>
+                    <p>{{inhibition}}</p>
+                    <ion-button fill="clear" @click="inhibition += 1" class="bg-transparent">
+                      <ion-icon color="success" :icon="addOutline" size="small"/>
+                    </ion-button>
+                  </div>
+                </ion-item>
+              </ion-list>
+            </div>
+            
             
             
 
@@ -323,29 +437,36 @@
 
 
 
-
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-  import {IonPopover, IonCheckbox, IonItemDivider, IonInput, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonButtons, IonIcon, IonCardHeader, IonText, IonList, IonItemSliding, IonItem, IonLabel, IonItemOptions, IonItemOption, IonModal } from '@ionic/vue';
-  import {add, addOutline, chevronDown, addCircle, removeCircle} from 'ionicons/icons'
+  import {IonPopover, IonCheckbox, IonTextarea, IonItemDivider, IonInput, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonButtons, IonIcon, IonCardHeader, IonText, IonList, IonItemSliding, IonItem, IonLabel, IonItemOptions, IonItemOption, IonModal } from '@ionic/vue';
+  import {add, addOutline, chevronDown, addCircle, removeCircle, removeOutline, flashlight, trashOutline, globeOutline} from 'ionicons/icons'
   import {Haptics, ImpactStyle} from '@capacitor/haptics'
+
   import {ref, reactive, computed, onMounted} from 'vue'
+  import type {Ref} from 'vue'
+
   import {Storage, Drivers} from '@ionic/storage'
   import {v4 as uuidv4} from 'uuid'
   import { toNumber } from '@vue/shared';
+
+  import axios from 'axios'
 
   const openModal = ref(false)
   const openModal2 = ref(false)
   const openModal3 = ref(false)
   const startpiece = ref(0)
 
+  const whiffs = ref(0)
+  const inhibition = ref(0)
+  const defended = ref(0)
 
   const leftcomm = ref(false)
 
-
+  const chicken = ref(["e", "b"])
 
   const autoCubesCones = ref([[0, 0], [0, 0], [0, 0]])
   const teleCubesCones = ref([[0, 0], [0, 0], [0, 0]])
@@ -354,9 +475,19 @@
   const autocs = ref(0)
   const telecs = ref(0)
 
+  const drivrating = ref(0)
+  const tippiness = ref(0)
+
+  const cubehold = ref(0)
+  const conehold = ref(0)
+
   const pros = ref("")
   const cons = ref("")
   const other = ref("")
+
+
+  const currenttime = ref(0)
+  const cycletimearray: Ref<Array<number>> = ref([])
 
   const name = ref("")
   const tnumber = ref("")
@@ -364,25 +495,59 @@
 
   const mode = ref(false)
   const startposition = ref(0)
+
+
+  const fell = ref(false)
   
-  const store = ref(new Storage({
-    name: '__mydb',
-    driverOrder: [Drivers.IndexedDB, Drivers.LocalStorage]
-  }))
+  const store = ref(new Storage())
+
+  const datacontent: Ref<Array<any>> = ref([])
+
+  const cardoptions = ref()
+
+ 
+
+  store.value.create()
+ 
 
   onMounted(async () => {
-    console.log("egg")
-    await store.value.create()
-    await store.value.set("milk", "cheese")
-    store.value.get("milk").then((ref) => {
-      console.log(ref)
+    store.value.forEach((val, k, index) => {
+      datacontent.value.push([k, JSON.parse(val)])
+      console.log(datacontent.value)
     })
+
+
+    setInterval(
+      () => {
+        if (openModal2.value) {
+          currenttime.value++
+        }
+        
+      },
+      1000
+    )
+  })
+
+
+
+  const averageCycle = computed(() => {
+
+    var total = 0
+
+
+    cycletimearray.value.forEach((val) => {total += val})
+
+    var average = (total/cycletimearray.value.length)
+
+    return average ? Math.round(average) : 0
   })
 
   const storeNew = async () => {
-    await store.value.set(
-      uuidv4(),
-      {
+
+
+
+
+    var datastruct = {
         name: name.value,
         tnum: parseInt(tnumber.value),
         mnum: parseInt(mnumber.value),
@@ -395,15 +560,313 @@
         tpts: telePts.value,
         achg: autocs.value,
         tchg: telecs.value,
+
+        cycl: averageCycle.value,
+
+        fail: whiffs.value,
+        inhb: inhibition.value,
+        dfnd: defended.value,
+
+        rate: drivrating.value,
+        tips: tippiness.value,
+
+        fell: fell.value,
+        cogb: conehold.value,
+        cugb: cubehold.value,
+
         pros: pros.value,
         cons: cons.value,
-        othr: other.value,
+        othr: other.value
+    }
 
 
+    var uuid = uuidv4()
 
-      }
-    )
+    // datacontent.value.push([uuid, datastruct])
+    datacontent.value.push([uuid, datastruct])
+    await store.value.set(uuid, JSON.stringify(datastruct))
+
+    formLinkGen(datastruct)
+
+    //reset all values back to standard
+    name.value = ""
+    tnumber.value = ""
+    mnumber.value = ""
+    leftcomm.value = false
+    startpiece.value = 0
+    startposition.value = 0
+    autoCubesCones.value = [[0, 0], [0, 0], [0, 0]]
+    teleCubesCones.value = [[0, 0], [0, 0], [0, 0]]
+    autoPts.value = 0
+    telePts.value = 0
+
+    
+
+    autocs.value = 0
+    telecs.value = 0
+    whiffs.value = 0
+    inhibition.value = 0
+    defended.value = 0
+    pros.value = ""
+    cons.value = ""
+    other.value = ""
+
+    fell.value = false
+    conehold.value = 0
+    cubehold.value = 0
+    drivrating.value = 0
+    tippiness.value = 0
+    cycletimearray.value = []
+    currenttime.value = 0
+
+    console.log(pros.value)
+    console.log(cons.value)
+    console.log(other.value)
+
+    openModal.value = false
   }
+
+  const removeItem = async(item: Array<any>) => {
+    await store.value.remove(item[0])
+    datacontent.value.splice(datacontent.value.indexOf(item), 1)
+    cardoptions.value.$el.close()
+  }
+
+
+  const formLinkGen = (data: Object) => {
+    
+    var nm = "entry.2126424725"
+    var team = "entry.1373155014"
+    var match = "entry.733521020"
+
+    var spos = "entry.901381857"
+    var stpc = "entry.1749280002"
+
+    var oocom = "entry.897955818"
+
+
+    var at = "entry.443174066"
+    var am = "entry.703504752"
+    var al = "entry.835867991"
+
+    var a = ["entry.443174066", "entry.703504752", "entry.835867991"]
+
+    var autochg = "entry.1638054401"
+
+
+    var tt = "entry.1021364095"
+    var tm = "entry.2035365430"
+    var tl = "entry.1556845106"
+
+    var t = ["entry.1021364095", "entry.2035365430", "entry.1556845106"]
+
+    var telechg = "entry.1864436619"
+
+
+    var tip = "entry.287809036"
+    var fall = "entry.102646935"
+
+    var conegrab = "entry.1393322075"
+    var cubegrab = "entry.78309013"
+
+
+
+    var whiff = "entry.1688133843"
+    var defend = "entry.635793247"
+    var inhibit = "entry.1748152210"
+
+    var drivrating = "entry.682978942"
+    var cycletime = "entry.1124506895"
+    var pro = "entry.534050999"
+    var con = "entry.820214933"
+    var others = "entry.844437757"     
+    
+    
+    var formID = "1FAIpQLScSFIdAgkF4KTI1nrBYgVWXfQSRSZrQdSsIWagp1jh4XXsphw"
+
+    
+    //formResponse
+    var baseLinkarr = ["https://docs.google.com/forms/d/e/1FAIpQLScSFIdAgkF4KTI1nrBYgVWXfQSRSZrQdSsIWagp1jh4XXsphw/formResponse?usp=pp_url/"]
+
+
+
+    baseLinkarr.push(`&${nm}=${plusEncoding(data.name)}`)
+    baseLinkarr.push(`&${team}=${data.tnum}`)
+    baseLinkarr.push(`&${match}=${data.mnum}`)
+
+
+
+    if (data.stpc == 0) {
+      baseLinkarr.push(`&${stpc}=None`)
+    }
+    else if (data.stpc == 1) {
+      baseLinkarr.push(`&${stpc}=Cone`)
+    }
+    else {
+      baseLinkarr.push(`&${stpc}=Cube`)
+    }
+
+
+    if (data.spos == 1) {
+      baseLinkarr.push(`&${spos}=Loading+Zone`)
+    }
+    else if (data.spos == 2) {
+      baseLinkarr.push(`&${spos}=Charging+Station`)
+    }
+    else {
+      baseLinkarr.push(`&${spos}=Cable+Cover`)
+    }
+
+    if (data.achg == 0) {
+      baseLinkarr.push(`&${autochg}=Neither+0+pts`)
+    }
+    else if (data.achg == 1) {
+      baseLinkarr.push(`&${autochg}=Docked+8+pts`)
+    }
+    else {
+      baseLinkarr.push(`&${autochg}=Balanced+12+pts`)
+    }
+
+    if (data.tchg == 0) {
+      baseLinkarr.push(`&${telechg}=Neither+0+pts`)
+    }
+    else if (data.tchg == 1) {
+      baseLinkarr.push(`&${telechg}=Docked+6+pts`)
+    }
+    else {
+      baseLinkarr.push(`&${telechg}=Balanced+10+pts`)
+    }
+
+  
+
+    if (data.lcom) {
+      baseLinkarr.push(`&${oocom}=Yes`)
+    }
+    else {
+      baseLinkarr.push(`&${oocom}=No`)
+    }
+
+    baseLinkarr.push(`&${whiff}=${data.fail}`)
+    baseLinkarr.push(`&${inhibit}=${data.inhb}`)
+    baseLinkarr.push(`&${defend}=${data.dfnd}`)
+
+    baseLinkarr.push(`&${drivrating}=${parseInt(data.rate)+1}`)
+    baseLinkarr.push(`&${tip}=${parseInt(data.tips)+1}`)
+
+    if (data.fell) {
+      baseLinkarr.push(`&${fall}=Yes`)
+    }
+    else {
+      baseLinkarr.push(`&${fall}=No`)
+    }
+
+    baseLinkarr.push(`&${cycletime}=${data.cycl}`) 
+
+    if(data.pros != "") {
+      baseLinkarr.push(`&${pro}=${data.pros}`)
+    }
+
+    if(data.cons != "") {
+      baseLinkarr.push(`&${con}=${data.cons}`) 
+    }
+
+    if(data.othr != "") {
+      baseLinkarr.push(`&${others}=${data.othr}`)
+    } 
+
+    
+
+    if (data.cogb == 0) {
+      baseLinkarr.push(`&${conegrab}=Can't+Pick+it+up`) 
+    }
+    else if (data.cogb == 1) {
+      baseLinkarr.push(`&${conegrab}=Drops+Immediately`)
+    }
+    else if (data.cogb == 2) {
+      baseLinkarr.push(`&${conegrab}=Takes+a+bump+to+knock+it+out`) 
+    }
+    else {
+      baseLinkarr.push(`&${conegrab}=Never+Drop`)
+    }
+
+    if (data.cugb == 0) {
+      baseLinkarr.push(`&${cubegrab}=Can't+Pick+it+up`) 
+    }
+    else if (data.cugb == 1) {
+      baseLinkarr.push(`&${cubegrab}=Drops+Immediately`)
+    }
+    else if (data.cugb == 2) {
+      baseLinkarr.push(`&${cubegrab}=Takes+a+bump+to+knock+it+out`) 
+    }
+    else {
+      baseLinkarr.push(`&${cubegrab}=Never+Drop`)
+    }
+
+    //named because its like the rosetta stone of numbers to positions huhuhu
+    var rosetta = ["L1", "L2", "L3", "M1", "M2", "M3", "R1", "R2", "R3"]
+
+    var autoposition = 0
+    var teleposition = 0
+
+    
+
+    console.log(typeof(data.agrd[0][0]))
+    console.log(typeof(data.tgrd[0][0]))
+
+    var autogridcount = data.agrd.map((item: Array<any>) => {
+      return item[0]+item[1]
+    })
+
+    console.log(autogridcount)
+    
+    autogridcount.forEach((i: number) => {
+      [...Array(i).keys()].forEach((j: number) => {
+        baseLinkarr.push(`&${a[autoposition]}=${rosetta[j]}`) 
+        console.log(j)
+        console.log(rosetta[j])
+      })
+
+      autoposition++
+    }) 
+
+    var telegridcount = data.tgrd.map((item: Array<any>) => {
+      return item[0]+item[1]
+    })
+
+    console.log(telegridcount)
+    
+    telegridcount.forEach((i: number) => {
+      [...Array(i).keys()].forEach((j: number) => {
+        baseLinkarr.push(`&${t[teleposition]}=${rosetta[j]}`) 
+        console.log(j)
+        console.log(rosetta[j])
+      })
+      teleposition++
+    }) 
+
+
+
+
+    var baseLink = baseLinkarr.join("")
+    console.log(baseLinkarr)
+
+    console.log(baseLink)
+
+
+    axios.get(baseLink).then(resp => {
+      console.log(resp)
+    })
+    return baseLink
+  }
+
+  const plusEncoding = (input: string) => {
+    var output = input.split(" ").join("+")
+    console.log(output)
+    return output
+    
+  }
+
+
 
   const changeState = () => {
     openModal.value = !openModal.value
@@ -431,6 +894,8 @@
               else {
                 autoPts.value += addamount
               }
+              cycletimearray.value.push(currenttime.value)
+              currenttime.value = 0
 
             }
             else if (position == 2 && (teleCubesCones.value[position][0]+teleCubesCones.value[position][1]) < 9) {
@@ -443,10 +908,14 @@
               else {
                 autoPts.value += addamount
               }
+              cycletimearray.value.push(currenttime.value)
+              currenttime.value = 0
             }
             else {
               Haptics.notification()
             }
+
+            
           }
 
           if (!mode) {
@@ -483,7 +952,8 @@
               else {
                 autoPts.value += addamount
               }
-
+              cycletimearray.value.push(currenttime.value)
+              currenttime.value = 0
             }
             else if (position == 2 && (autoCubesCones.value[position][0]+autoCubesCones.value[position][1]) < 9) {
               autoCubesCones.value[position][type] += 1
@@ -495,6 +965,8 @@
               else {
                 autoPts.value += addamount
               }
+              cycletimearray.value.push(currenttime.value)
+              currenttime.value = 0
             }
             else {
               Haptics.notification()

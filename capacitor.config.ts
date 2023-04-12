@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'univscoutapp.g5works.com',
-  appName: 'scouting-app-but-ionic',
+  appId: 'amigascout.g5works.com',
+  appName: 'AMIGAScouting',
   webDir: 'dist',
   bundledWebRuntime: false
 };

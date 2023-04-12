@@ -242,7 +242,7 @@ http://ionicframework.com/docs/theming/ */
 }
 
 
-ion-item {
+.ios ion-item {
   --background: var(--ion-color-step-150);
 }
 
@@ -260,23 +260,20 @@ ion-item {
 }
 
 
-ion-popover {
-  --background: rgba(var(--ion-color-dark-contrast-rgb), 0.6);
-}
-
-ion-popover::part(content) {
-  backdrop-filter: blur(10px);
-}
 
 
-ion-checkbox {
+.ios ion-checkbox {
   --checkbox-background: var(--ion-color-step-150);
 }
 
 
 
-ion-item-divider {
+.ios ion-item-divider {
   --background: var(--ion-color-step-200)
+}
+
+.md ion-item-divider {
+  --background: transparent
 }
 
 
@@ -296,5 +293,9 @@ ion-item-divider {
 
 .zstack-no-center > * {
 	grid-area: 1/1/1/1;
+}
+
+ion-button.button-disabled {
+  --color: gray;
 }
 
