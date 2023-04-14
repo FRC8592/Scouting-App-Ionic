@@ -9,6 +9,11 @@
             <ion-icon :icon="addOutline"></ion-icon>
           </ion-button>
         </ion-buttons>
+        <ion-buttons slot="start">
+          <ion-button @click="openModal4 = true">
+            <ion-icon :icon="cogOutline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -58,7 +63,7 @@
               <ion-button @click="storeNew()" class="font-bold" :disabled="!(name && tnumber && mnumber)">Add</ion-button>
             </ion-buttons>
             <ion-buttons slot="start">
-              <ion-button @click="changeState">Close</ion-button>
+              <ion-button @click="resetClose">Close</ion-button>
             </ion-buttons>
           </ion-toolbar>
         </ion-header>
@@ -137,13 +142,30 @@
             </ion-item-divider>
             
 
-            <ion-item class="clickable" @click="{openModal2 = true; mode = true}">
+            <ion-item v-if="classicmode" class="clickable" @click="{openModal2 = true; mode = true}">
               <p>Cubes and Cones</p>
             </ion-item>
 
             <ion-item>
-              <ion-checkbox color="danger" v-model="fell">Did they fall?</ion-checkbox>
+              <div class="w-full flex items-center justify-between">
+                <p>Where do they grab from?</p>
+                <select v-model="grabfrom" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
+                  <option value="0">Single Substation</option>
+                  <option value="1">Double Substation</option>         
+                </select>
+                
+              </div>
             </ion-item>
+
+            <!-- <ion-item>
+              <ion-checkbox color="danger" v-model="fell">Did they fall?</ion-checkbox>
+            </ion-item> -->
+
+
+            <ion-item>
+              <ion-checkbox color="primary" v-model="die">Were they active/moving?</ion-checkbox>
+            </ion-item>
+
 
             <ion-item>
               <div class="w-full flex items-center justify-between">
@@ -173,7 +195,7 @@
               </div>
             </ion-item>
 
-            <ion-item>
+            <ion-item v-if="classicmode">
               <div class="w-full flex items-center justify-between">
                 <p>Charge Station Status</p>
                 <select v-model="telecs" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
@@ -197,11 +219,11 @@
               <div class="w-full flex items-center justify-between">
                 <p>Driver Performance</p>
                 <select v-model="drivrating" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
-                  <option value="0">Very Bad</option>
-                  <option value="1">Bad</option>
-                  <option value="2">Decent</option>
-                  <option value="3">Good</option>
-                  <option value="4">Very Good</option>
+                  <option value="0">Slow</option>
+                  <option value="1">Fluid</option>
+                  <option value="2">Erratic/Aggressive</option>
+                  <!-- <option value="3">Good</option>
+                  <option value="4">Very Good</option> -->
          
                 </select>
                 
@@ -436,6 +458,38 @@
       </ion-modal>
 
 
+      <ion-modal :is-open="openModal4">
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>Settings</ion-title>
+            <ion-buttons slot="end">
+              <ion-button @click="settingsSave">Save</ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding modal-content">
+          <div class="pb-24">
+            <ion-list :inset="true">
+              <ion-item>
+                <ion-label>
+                  Classic Mode
+                  <p class="whitespace-normal">Brings back the old fields that were removed in this version</p>
+                </ion-label>
+                <ion-checkbox v-model="classicmode"></ion-checkbox>
+              </ion-item>
+              <ion-item>
+                <ion-input v-model="name" placeholder="Saved Scouter Name"/>
+              </ion-item>
+            </ion-list>
+          </div>
+        </ion-content>
+        
+
+
+        
+      </ion-modal>
+
+
 
     </ion-content>
   </ion-page>
@@ -443,14 +497,14 @@
 
 <script setup lang="ts">
   import {IonPopover, IonCheckbox, IonTextarea, IonItemDivider, IonInput, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonButtons, IonIcon, IonCardHeader, IonText, IonList, IonItemSliding, IonItem, IonLabel, IonItemOptions, IonItemOption, IonModal } from '@ionic/vue';
-  import {add, addOutline, chevronDown, addCircle, removeCircle, removeOutline, flashlight, trashOutline, globeOutline} from 'ionicons/icons'
+  import {add, addOutline, cogOutline, chevronDown, addCircle, removeCircle, removeOutline, flashlight, trashOutline, globeOutline} from 'ionicons/icons'
   import {Haptics, ImpactStyle} from '@capacitor/haptics'
 
   import {ref, reactive, computed, onMounted} from 'vue'
   import type {Ref} from 'vue'
 
   import {Storage, Drivers} from '@ionic/storage'
-  import {v4 as uuidv4} from 'uuid'
+  import {v4 as uuidv4, validate} from 'uuid'
   import { toNumber } from '@vue/shared';
 
   import axios from 'axios'
@@ -458,11 +512,19 @@
   const openModal = ref(false)
   const openModal2 = ref(false)
   const openModal3 = ref(false)
+  const openModal4 = ref(false)
   const startpiece = ref(0)
+
+
+  const grabfrom = ref(0)
+
+  const classicmode = ref(false)
 
   const whiffs = ref(0)
   const inhibition = ref(0)
   const defended = ref(0)
+
+  const die = ref(false)
 
   const leftcomm = ref(false)
 
@@ -500,6 +562,7 @@
   const fell = ref(false)
   
   const store = ref(new Storage())
+  const prefs = ref(new Storage())
 
   const datacontent: Ref<Array<any>> = ref([])
 
@@ -508,39 +571,37 @@
  
 
   store.value.create()
+  prefs.value.create()
  
 
   onMounted(async () => {
     store.value.forEach((val, k, index) => {
-      datacontent.value.push([k, JSON.parse(val)])
-      console.log(datacontent.value)
+      if (validate(k)){
+        datacontent.value.push([k, JSON.parse(val)])
+        console.log(datacontent.value)
+      }
     })
 
 
-    setInterval(
-      () => {
-        if (openModal2.value) {
-          currenttime.value++
-        }
-        
-      },
-      1000
-    )
+    store.value.get("classicmode").then((resp) => {
+      classicmode.value = resp
+
+
+      console.log(resp)
+      console.log("milk")
+    })
+
+    store.value.get("name").then((resp) => {
+
+      name.value = resp
+
+      console.log(resp)
+      console.log("milk")
+    })
+
+    console.log("cheeses")
   })
 
-
-
-  const averageCycle = computed(() => {
-
-    var total = 0
-
-
-    cycletimearray.value.forEach((val) => {total += val})
-
-    var average = (total/cycletimearray.value.length)
-
-    return average ? Math.round(average) : 0
-  })
 
   const storeNew = async () => {
 
@@ -561,16 +622,12 @@
         achg: autocs.value,
         tchg: telecs.value,
 
-        cycl: averageCycle.value,
-
-        fail: whiffs.value,
-        inhb: inhibition.value,
-        dfnd: defended.value,
+        grab: grabfrom.value,
 
         rate: drivrating.value,
         tips: tippiness.value,
 
-        fell: fell.value,
+        fell: die.value,
         cogb: conehold.value,
         cugb: cubehold.value,
 
@@ -587,8 +644,12 @@
     await store.value.set(uuid, JSON.stringify(datastruct))
 
     formLinkGen(datastruct)
-
+    resetClose()
     //reset all values back to standard
+    
+  }
+
+  const resetClose = () => {
     name.value = ""
     tnumber.value = ""
     mnumber.value = ""
@@ -600,6 +661,7 @@
     autoPts.value = 0
     telePts.value = 0
 
+    grabfrom.value = 0
     
 
     autocs.value = 0
@@ -626,6 +688,13 @@
     openModal.value = false
   }
 
+  const settingsSave = async () => {
+    console.log(classicmode.value)
+    await prefs.value.set("classicmode", classicmode.value)
+    await prefs.value.set("name", name.value)
+    openModal4.value = false
+  }
+
   const removeItem = async(item: Array<any>) => {
     await store.value.remove(item[0])
     datacontent.value.splice(datacontent.value.indexOf(item), 1)
@@ -645,18 +714,26 @@
     var oocom = "entry.897955818"
 
 
-    var at = "entry.443174066"
-    var am = "entry.703504752"
-    var al = "entry.835867991"
+    var atcu = "entry.618327558"
+    var amcu = "entry.1104917121"
+    var alcu = "entry.1558545009"
+    var atco = "entry.491145462"
+    var amco = "entry.897281594"
+    var alco = "entry.808988189"
 
     var a = ["entry.443174066", "entry.703504752", "entry.835867991"]
 
     var autochg = "entry.1638054401"
 
 
-    var tt = "entry.1021364095"
-    var tm = "entry.2035365430"
-    var tl = "entry.1556845106"
+    var ttcu = "entry.7089184"
+    var tmcu = "entry.605530354"
+    var tlcu = "entry.1879350172"
+    var ttco = "entry.1805062483"
+    var tmco = "entry.905941638"
+    var tlco = "entry.1086687789"
+
+    var substation = "entry.1270495342"
 
     var t = ["entry.1021364095", "entry.2035365430", "entry.1556845106"]
 
@@ -669,14 +746,14 @@
     var conegrab = "entry.1393322075"
     var cubegrab = "entry.78309013"
 
+    // var whiff = "entry.1688133843"
+    // var defend = "entry.635793247"
+    // var inhibit = "entry.1748152210"
 
+    var drivrating = "entry.89792760"
 
-    var whiff = "entry.1688133843"
-    var defend = "entry.635793247"
-    var inhibit = "entry.1748152210"
-
-    var drivrating = "entry.682978942"
-    var cycletime = "entry.1124506895"
+    // var cycletime = "entry.1124506895"
+    
     var pro = "entry.534050999"
     var con = "entry.820214933"
     var others = "entry.844437757"     
@@ -746,11 +823,22 @@
       baseLinkarr.push(`&${oocom}=No`)
     }
 
-    baseLinkarr.push(`&${whiff}=${data.fail}`)
-    baseLinkarr.push(`&${inhibit}=${data.inhb}`)
-    baseLinkarr.push(`&${defend}=${data.dfnd}`)
 
-    baseLinkarr.push(`&${drivrating}=${parseInt(data.rate)+1}`)
+
+    if (data.drivrating == 0) {
+      baseLinkarr.push(`&${drivrating}=Slow`)
+    }
+    else if (data.drivrating == 1) {
+      baseLinkarr.push(`&${drivrating}=Fluid`)
+    }
+    else {
+      baseLinkarr.push(`&${drivrating}=Fast+but+Bumps+into+Things`)
+    }
+
+    // baseLinkarr.push(`&${drivrating}=${parseInt(data.rate)+1}`)
+
+
+
     baseLinkarr.push(`&${tip}=${parseInt(data.tips)+1}`)
 
     if (data.fell) {
@@ -760,7 +848,13 @@
       baseLinkarr.push(`&${fall}=No`)
     }
 
-    baseLinkarr.push(`&${cycletime}=${data.cycl}`) 
+
+    if (data.grab == 0) {
+      baseLinkarr.push(`&${substation}=Single+Substation`)
+    }
+    else {
+      baseLinkarr.push(`&${substation}=Double+Substation`)
+    }
 
     if(data.pros != "") {
       baseLinkarr.push(`&${pro}=${data.pros}`)
@@ -802,47 +896,29 @@
       baseLinkarr.push(`&${cubegrab}=Never+Drop`)
     }
 
-    //named because its like the rosetta stone of numbers to positions huhuhu
-    var rosetta = ["L1", "L2", "L3", "M1", "M2", "M3", "R1", "R2", "R3"]
-
-    var autoposition = 0
-    var teleposition = 0
 
     
 
     console.log(typeof(data.agrd[0][0]))
     console.log(typeof(data.tgrd[0][0]))
 
-    var autogridcount = data.agrd.map((item: Array<any>) => {
-      return item[0]+item[1]
-    })
+    baseLinkarr.push(`&${atcu}=${data.agrd[0][1]}`) 
+    baseLinkarr.push(`&${amcu}=${data.agrd[1][1]}`) 
+    baseLinkarr.push(`&${alcu}=${data.agrd[2][1]}`) 
+    baseLinkarr.push(`&${atco}=${data.agrd[0][0]}`) 
+    baseLinkarr.push(`&${amco}=${data.agrd[1][0]}`) 
+    baseLinkarr.push(`&${alco}=${data.agrd[2][0]}`) 
 
-    console.log(autogridcount)
+  
+
+    baseLinkarr.push(`&${ttcu}=${data.tgrd[0][1]}`) 
+    baseLinkarr.push(`&${tmcu}=${data.tgrd[1][1]}`) 
+    baseLinkarr.push(`&${tlcu}=${data.tgrd[2][1]}`) 
+    baseLinkarr.push(`&${ttco}=${data.tgrd[0][0]}`) 
+    baseLinkarr.push(`&${tmco}=${data.tgrd[1][0]}`) 
+    baseLinkarr.push(`&${tlco}=${data.tgrd[2][0]}`) 
     
-    autogridcount.forEach((i: number) => {
-      [...Array(i).keys()].forEach((j: number) => {
-        baseLinkarr.push(`&${a[autoposition]}=${rosetta[j]}`) 
-        console.log(j)
-        console.log(rosetta[j])
-      })
 
-      autoposition++
-    }) 
-
-    var telegridcount = data.tgrd.map((item: Array<any>) => {
-      return item[0]+item[1]
-    })
-
-    console.log(telegridcount)
-    
-    telegridcount.forEach((i: number) => {
-      [...Array(i).keys()].forEach((j: number) => {
-        baseLinkarr.push(`&${t[teleposition]}=${rosetta[j]}`) 
-        console.log(j)
-        console.log(rosetta[j])
-      })
-      teleposition++
-    }) 
 
 
 
@@ -863,6 +939,12 @@
     var output = input.split(" ").join("+")
     console.log(output)
     return output
+    
+  }
+
+  const setClassic = async (e: Event) => {
+    console.log(classicmode.value)
+    await prefs.value.set("classicmode", !classicmode.value)
     
   }
 
