@@ -137,9 +137,9 @@
             </ion-item-divider>
             
 
-            <ion-item class="clickable" @click="{openModal2 = true; mode = true}">
+            <!-- <ion-item class="clickable" @click="{openModal2 = true; mode = true}">
               <p>Cubes and Cones</p>
-            </ion-item>
+            </ion-item> -->
 
             <ion-item>
               <ion-checkbox color="danger" v-model="fell">Did they fall?</ion-checkbox>
@@ -197,11 +197,10 @@
               <div class="w-full flex items-center justify-between">
                 <p>Driver Performance</p>
                 <select v-model="drivrating" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
-                  <option value="0">Very Bad</option>
-                  <option value="1">Bad</option>
-                  <option value="2">Decent</option>
-                  <option value="3">Good</option>
-                  <option value="4">Very Good</option>
+                  <option value="0">Slow</option>
+                  <option value="1">Fluid</option>
+                  <option value="2">Aggressive</option>
+              
          
                 </select>
                 
@@ -221,6 +220,18 @@
                 
               </div>
             </ion-item>
+
+            <ion-item>
+              <div class="w-full flex items-center justify-between">
+                <p>Preferred Substation</p>
+                <select v-model="substation" class="text-neutral-500 outline-none w-28 whitespace-pre-wrap my-3">
+                  <option value="0">Single Substation</option>
+                  <option value="1">Double Substation</option>         
+                </select>
+                
+              </div>
+            </ion-item>
+
             <ion-item>
               <ion-textarea @input="pros=$event.target.value" class="my-1" label="" placeholder="What did you like about their performance?"></ion-textarea>
             </ion-item>
@@ -441,6 +452,8 @@
   </ion-page>
 </template>
 
+<!--end of templating code, this is now js from here on out-->
+
 <script setup lang="ts">
   import {IonPopover, IonCheckbox, IonTextarea, IonItemDivider, IonInput, IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonButtons, IonIcon, IonCardHeader, IonText, IonList, IonItemSliding, IonItem, IonLabel, IonItemOptions, IonItemOption, IonModal } from '@ionic/vue';
   import {add, addOutline, chevronDown, addCircle, removeCircle, removeOutline, flashlight, trashOutline, globeOutline} from 'ionicons/icons'
@@ -466,8 +479,6 @@
 
   const leftcomm = ref(false)
 
-  const chicken = ref(["e", "b"])
-
   const autoCubesCones = ref([[0, 0], [0, 0], [0, 0]])
   const teleCubesCones = ref([[0, 0], [0, 0], [0, 0]])
   const autoPts = ref(0)
@@ -477,6 +488,7 @@
 
   const drivrating = ref(0)
   const tippiness = ref(0)
+  const substation = ref(0)
 
   const cubehold = ref(0)
   const conehold = ref(0)
@@ -545,7 +557,7 @@
   const storeNew = async () => {
 
 
-
+    //datastructure that signifies the objects
 
     var datastruct = {
         name: name.value,
@@ -561,6 +573,7 @@
         achg: autocs.value,
         tchg: telecs.value,
 
+
         cycl: averageCycle.value,
 
         fail: whiffs.value,
@@ -569,6 +582,7 @@
 
         rate: drivrating.value,
         tips: tippiness.value,
+        sbst: substation.value,
 
         fell: fell.value,
         cogb: conehold.value,
@@ -615,6 +629,7 @@
     conehold.value = 0
     cubehold.value = 0
     drivrating.value = 0
+    substation.value = 0
     tippiness.value = 0
     cycletimearray.value = []
     currenttime.value = 0
@@ -645,18 +660,21 @@
     var oocom = "entry.897955818"
 
 
-    var at = "entry.443174066"
-    var am = "entry.703504752"
-    var al = "entry.835867991"
+    var at = "entry.443174066" //not working
+    var am = "entry.703504752" //not working
+    var al = "entry.835867991" //not working
 
-    var a = ["entry.443174066", "entry.703504752", "entry.835867991"]
+    var a = [
+      "entry.618327558", 
+      "entry.1104917121", 
+      "entry.1558545009",
+      "entry.491145462",
+      "entry.897281594",
+      "entry.808988189"
+    ] //not working
 
     var autochg = "entry.1638054401"
 
-
-    var tt = "entry.1021364095"
-    var tm = "entry.2035365430"
-    var tl = "entry.1556845106"
 
     var t = ["entry.1021364095", "entry.2035365430", "entry.1556845106"]
 
@@ -675,8 +693,10 @@
     var defend = "entry.635793247"
     var inhibit = "entry.1748152210"
 
-    var drivrating = "entry.682978942"
+    var drivrating = "entry.89792760" //not working
     var cycletime = "entry.1124506895"
+    var subst = "entry.1270495342"
+
     var pro = "entry.534050999"
     var con = "entry.820214933"
     var others = "entry.844437757"     
@@ -750,7 +770,24 @@
     baseLinkarr.push(`&${inhibit}=${data.inhb}`)
     baseLinkarr.push(`&${defend}=${data.dfnd}`)
 
-    baseLinkarr.push(`&${drivrating}=${parseInt(data.rate)+1}`)
+
+    console.log(`driver rating: ${data.rate}`)
+
+    if (data.rate === 0) {
+      baseLinkarr.push(`&${drivrating}=Slow`)
+      console.log("trigger")
+    }
+    else if (data.rate === 1) {
+      baseLinkarr.push(`&${drivrating}=Fluid`)
+      console.log("trigger")
+    }
+    else {
+      baseLinkarr.push(`&${drivrating}=Fast+but+Bumps+into+Things`)
+      console.log("trigger")
+    }
+
+    console.log
+
     baseLinkarr.push(`&${tip}=${parseInt(data.tips)+1}`)
 
     if (data.fell) {
@@ -802,47 +839,71 @@
       baseLinkarr.push(`&${cubegrab}=Never+Drop`)
     }
 
+    if (data.sbst == 0) {
+      baseLinkarr.push(`&${subst}=Single+Substation`)
+    }
+    else {
+      baseLinkarr.push(`&${subst}=Double+Substation`)
+    }
+
+
+
+    //check from here
+
     //named because its like the rosetta stone of numbers to positions huhuhu
     var rosetta = ["L1", "L2", "L3", "M1", "M2", "M3", "R1", "R2", "R3"]
 
     var autoposition = 0
     var teleposition = 0
 
+  
+
+ 
+
+    baseLinkarr.push(`&${a[0]}=${data.agrd[0][0]}`)
+    baseLinkarr.push(`&${a[1]}=${data.agrd[1][0]}`)
+    baseLinkarr.push(`&${a[2]}=${data.agrd[2][0]}`)
+    baseLinkarr.push(`&${a[3]}=${data.agrd[0][1]}`)
+    baseLinkarr.push(`&${a[4]}=${data.agrd[1][1]}`)
+    baseLinkarr.push(`&${a[5]}=${data.agrd[2][1]}`)
+ 
+
+
+
+
+
+    // var autogridcount = data.agrd.map((item: Array<any>) => {
+    //   return item[0]+item[1]
+    // })
+
+    // console.log(autogridcount)
     
+    // autogridcount.forEach((i: number) => {
+    //   [...Array(i).keys()].forEach((j: number) => {
+    //     baseLinkarr.push(`&${a[autoposition]}=${rosetta[j]}`) 
+    //     console.log(j)
+    //     console.log(rosetta[j])
+    //   })
 
-    console.log(typeof(data.agrd[0][0]))
-    console.log(typeof(data.tgrd[0][0]))
+    //   autoposition++
 
-    var autogridcount = data.agrd.map((item: Array<any>) => {
-      return item[0]+item[1]
-    })
+    //   //to here for errors in the auto posit system
+    // }) 
 
-    console.log(autogridcount)
+    // var telegridcount = data.tgrd.map((item: Array<any>) => {
+    //   return item[0]+item[1]
+    // })
+
+    // console.log(telegridcount)
     
-    autogridcount.forEach((i: number) => {
-      [...Array(i).keys()].forEach((j: number) => {
-        baseLinkarr.push(`&${a[autoposition]}=${rosetta[j]}`) 
-        console.log(j)
-        console.log(rosetta[j])
-      })
-
-      autoposition++
-    }) 
-
-    var telegridcount = data.tgrd.map((item: Array<any>) => {
-      return item[0]+item[1]
-    })
-
-    console.log(telegridcount)
-    
-    telegridcount.forEach((i: number) => {
-      [...Array(i).keys()].forEach((j: number) => {
-        baseLinkarr.push(`&${t[teleposition]}=${rosetta[j]}`) 
-        console.log(j)
-        console.log(rosetta[j])
-      })
-      teleposition++
-    }) 
+    // telegridcount.forEach((i: number) => {
+    //   [...Array(i).keys()].forEach((j: number) => {
+    //     baseLinkarr.push(`&${t[teleposition]}=${rosetta[j]}`) 
+    //     console.log(j)
+    //     console.log(rosetta[j])
+    //   })
+    //   teleposition++
+    // }) 
 
 
 
