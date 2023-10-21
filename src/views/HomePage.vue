@@ -676,7 +676,14 @@
     var autochg = "entry.1638054401"
 
 
-    var t = ["entry.1021364095", "entry.2035365430", "entry.1556845106"]
+    var t = [
+      "entry.7089184", 
+      "entry.605530354", 
+      "entry.1879350172",
+      "entry.1805062483",
+      "entry.905941638",
+      "entry.1086687789"
+    ] //not working
 
     var telechg = "entry.1864436619"
 
